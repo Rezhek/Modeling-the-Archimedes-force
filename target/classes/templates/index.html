@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моделирование силы Архимеда</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Фон страницы — белый */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group .unit {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .chart-container h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .chart {
+            width: 100%;
+            height: 300px;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-table tr {
+            border-bottom: 1px solid #eee;
+        }
+
+        .details-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .details-table td {
+            padding: 12px 0;
+            color: #333;
+        }
+
+        .details-table td:first-child {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .details-table td:last-child {
+            text-align: right;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .emoji {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><span class="emoji">🏊</span>Моделирование силы Архимеда</h1>
+        <p>Интерактивный калькулятор с визуализацией сил (ECharts)</p>
+    </header>
+
+    <div class="main-content">
+        <!-- Левая колонка -->
+        <div class="left-column">
+            <div class="panel">
+                <h2><span class="emoji">📝</span>Введите параметры</h2>
+
+                <div class="input-group">
+                    <label>⚪ Плотность шара</label>
+                    <input type="text" id="sphereDensity" value="1000" inputmode="decimal"
+                           oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                    <div class="unit">кг/м³</div>
+                </div>
+
+                <div class="input-group">
+                    <label>📏 Радиус шара</label>
+                    <input type="text" id="sphereRadius" value="0.1" inputmode="decimal"
+                           oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                    <div class="unit">м</div>
+                </div>
+
+                <div class="input-group">
+                    <label>💧 Плотность жидкости</label>
+                    <input type="text" id="liquidDensity" value="1000" inputmode="decimal"
+                           oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                    <div class="unit">кг/м³</div>
+                </div>
+
+                <div class="input-group">
+                    <label>🔄 Вязкость жидкости</label>
+                    <input type="text" id="viscosity" value="0.001" inputmode="decimal"
+                           oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                    <div class="unit">Па·с</div>
+                </div>
+
+                <button class="btn-calculate" onclick="calculate()">
+                    <span class="emoji">🧮</span>Рассчитать и обновить графики
+                </button>
+            </div>
+
+            <div class="panel" style="margin-top: 20px;">
+                <h2><span class="emoji">📋</span>Детальные параметры</h2>
+
+                <table class="details-table">
+                    <tr><td>Объем шара:</td><td><span id="sphereVolume">0.004189</span> м³</td></tr>
+                    <tr><td>Масса шара:</td><td><span id="sphereMass">4.189</span> кг</td></tr>
+                    <tr><td>Плотность шара:</td><td><span id="displaySphereDensity">1000.00</span> кг/м³</td></tr>
+                    <tr><td>Плотность жидкости:</td><td><span id="displayLiquidDensity">1000.00</span> кг/м³</td></tr>
+                    <tr><td>Радиус шара:</td><td><span id="displayRadius">0.100</span> м</td></tr>
+                    <tr><td>Вязкость жидкости:</td><td><span id="displayViscosity">0.0010</span> Па·с</td></tr>
+                    <tr><td>⚡ Ускорение свободного падения:</td><td>9.81 м/с²</td></tr>
+                    <tr><td>🌀 Число Пи:</td><td>3.14159</td></tr>
+                    <tr><td>🏃 Скорость (константа):</td><td>67.0 м/с</td></tr>
+                </table>
+
+                <div class="info-box">
+                    <span class="emoji">💡</span>Измените параметры выше и нажмите "Рассчитать" для обновления результатов и графиков
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка – только графики -->
+        <div class="right-column">
+            <div class="chart-container">
+                <h3><span class="emoji">📊</span>Сравнение сил (Н)</h3>
+                <div id="forceComparisonChart" class="chart"></div>
+            </div>
+
+            <div class="chart-container">
+                <h3><span class="emoji">📈</span>Зависимость от радиуса</h3>
+                <div id="radiusDependencyChart" class="chart"></div>
+            </div>
+
+            <div class="chart-container">
+                <h3><span class="emoji">📉</span>Зависимость от плотности жидкости</h3>
+                <div id="densityDependencyChart" class="chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 Архимед Симулятор. Все права защищены.</p>
+    </footer>
+</div>
+
+<script>
+    // Константы
+    const G = 9.81;
+    const PI = 3.14159;
+    const VELOCITY = 67.0;
+
+    // Инициализация графиков
+    let forceComparisonChart, radiusDependencyChart, densityDependencyChart;
+
+    function initCharts() {
+        forceComparisonChart = echarts.init(document.getElementById('forceComparisonChart'));
+        radiusDependencyChart = echarts.init(document.getElementById('radiusDependencyChart'));
+        densityDependencyChart = echarts.init(document.getElementById('densityDependencyChart'));
+
+        window.addEventListener('resize', function() {
+            forceComparisonChart.resize();
+            radiusDependencyChart.resize();
+            densityDependencyChart.resize();
+        });
+    }
+
+    // Основная функция расчёта
+    function calculate() {
+        // Чтение значений из полей (уже очищены от лишних символов)
+        const sphereDensity = parseFloat(document.getElementById('sphereDensity').value) || 0;
+        const sphereRadius = parseFloat(document.getElementById('sphereRadius').value) || 0;
+        const liquidDensity = parseFloat(document.getElementById('liquidDensity').value) || 0;
+        const viscosity = parseFloat(document.getElementById('viscosity').value) || 0;
+
+        const volume = (4/3) * PI * Math.pow(sphereRadius, 3);
+        const mass = sphereDensity * volume;
+        const gravityForce = mass * G;
+        const archimedesForce = liquidDensity * volume * G;
+        const stokesForce = 6 * PI * viscosity * sphereRadius * VELOCITY;
+
+        // Обновляем детальные параметры
+        document.getElementById('sphereVolume').textContent = volume.toFixed(6);
+        document.getElementById('sphereMass').textContent = mass.toFixed(3);
+        document.getElementById('displaySphereDensity').textContent = sphereDensity.toFixed(2);
+        document.getElementById('displayLiquidDensity').textContent = liquidDensity.toFixed(2);
+        document.getElementById('displayRadius').textContent = sphereRadius.toFixed(3);
+        document.getElementById('displayViscosity').textContent = viscosity.toFixed(4);
+
+        // Обновляем графики
+        updateForceComparisonChart(gravityForce, archimedesForce, stokesForce);
+        updateRadiusDependencyChart();
+        updateDensityDependencyChart();
+    }
+
+    // График сравнения сил
+    function updateForceComparisonChart(gravityForce, archimedesForce, stokesForce) {
+        const maxValue = Math.max(gravityForce, archimedesForce, stokesForce);
+        const yAxisMax = maxValue > 0 ? Math.ceil(maxValue * 1.3) : 10;
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    return params[0].name + ': ' + params[0].value.toFixed(2) + ' Н';
+                }
+            },
+            grid: {
+                left: '8%',
+                right: '5%',
+                bottom: '8%',
+                top: '18%',
+                containLabel: false
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Сила тяжести', 'Сила Архимеда', 'Сила Стокса'],
+                axisLabel: { fontSize: 11 }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Н',
+                min: 0,
+                max: yAxisMax,
+                axisLabel: {
+                    formatter: function(value) {
+                        if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                        return value.toFixed(1);
+                    }
+                }
+            },
+            series: [{
+                type: 'bar',
+                data: [
+                    parseFloat(gravityForce.toFixed(1)),
+                    parseFloat(archimedesForce.toFixed(1)),
+                    parseFloat(stokesForce.toFixed(2))
+                ],
+                itemStyle: {
+                    color: function(params) {
+                        var colors = ['#ff6384', '#36a2eb', '#ffce56'];
+                        return colors[params.dataIndex];
+                    }
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return params.value.toFixed(2) + ' Н';
+                    },
+                    fontSize: 10
+                },
+                barWidth: '50%'
+            }]
+        };
+        forceComparisonChart.setOption(option, true);
+    }
+
+    // График зависимости от радиуса
+    function updateRadiusDependencyChart() {
+        const sphereDensity = parseFloat(document.getElementById('sphereDensity').value) || 1000;
+        const liquidDensity = parseFloat(document.getElementById('liquidDensity').value) || 1000;
+        const viscosity = parseFloat(document.getElementById('viscosity').value) || 0.001;
+
+        const radii = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3];
+        const gravityData = [];
+        const archimedesData = [];
+        const stokesData = [];
+
+        radii.forEach(r => {
+            const volume = (4/3) * PI * Math.pow(r, 3);
+            const mass = sphereDensity * volume;
+            gravityData.push(parseFloat((mass * G).toFixed(1)));
+            archimedesData.push(parseFloat((liquidDensity * volume * G).toFixed(1)));
+            stokesData.push(parseFloat((6 * PI * viscosity * r * VELOCITY).toFixed(2)));
+        });
+
+        const allValues = [...gravityData, ...archimedesData, ...stokesData];
+        const maxY = Math.max(...allValues) * 1.2;
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    let result = params[0].name + '<br/>';
+                    params.forEach(p => {
+                        result += p.marker + p.seriesName + ': ' + p.value.toFixed(2) + ' Н<br/>';
+                    });
+                    return result;
+                }
+            },
+            legend: {
+                data: ['Сила тяжести', 'Сила Архимеда', 'Сила Стокса'],
+                bottom: 5,
+                textStyle: { fontSize: 10 }
+            },
+            grid: {
+                left: '8%',
+                right: '5%',
+                bottom: '25%',
+                top: '10%',
+                containLabel: false
+            },
+            xAxis: {
+                type: 'category',
+                data: radii.map(r => r + ' м'),
+                axisLabel: { fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Н',
+                min: 0,
+                max: maxY,
+                axisLabel: {
+                    formatter: function(value) {
+                        if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                        return value.toFixed(1);
+                    }
+                }
+            },
+            series: [
+                {
+                    name: 'Сила тяжести',
+                    type: 'line',
+                    data: gravityData,
+                    smooth: true,
+                    itemStyle: { color: '#ff6384' },
+                    symbolSize: 6
+                },
+                {
+                    name: 'Сила Архимеда',
+                    type: 'line',
+                    data: archimedesData,
+                    smooth: true,
+                    itemStyle: { color: '#36a2eb' },
+                    symbolSize: 6
+                },
+                {
+                    name: 'Сила Стокса',
+                    type: 'line',
+                    data: stokesData,
+                    smooth: true,
+                    itemStyle: { color: '#ffce56' },
+                    symbolSize: 6
+                }
+            ]
+        };
+        radiusDependencyChart.setOption(option, true);
+    }
+
+    // График зависимости от плотности жидкости
+    function updateDensityDependencyChart() {
+        const sphereDensity = parseFloat(document.getElementById('sphereDensity').value) || 1000;
+        const sphereRadius = parseFloat(document.getElementById('sphereRadius').value) || 0.1;
+        const viscosity = parseFloat(document.getElementById('viscosity').value) || 0.001;
+
+        const densities = [500, 750, 1000, 1250, 1500, 1750, 2000];
+        const gravityData = [];
+        const archimedesData = [];
+        const stokesData = [];
+
+        const volume = (4/3) * PI * Math.pow(sphereRadius, 3);
+        const mass = sphereDensity * volume;
+        const gravityForce = parseFloat((mass * G).toFixed(1));
+        const stokesForce = parseFloat((6 * PI * viscosity * sphereRadius * VELOCITY).toFixed(2));
+
+        densities.forEach(ρ => {
+            gravityData.push(gravityForce);
+            archimedesData.push(parseFloat((ρ * volume * G).toFixed(1)));
+            stokesData.push(stokesForce);
+        });
+
+        const allValues = [...gravityData, ...archimedesData, ...stokesData];
+        const maxY = Math.max(...allValues) * 1.2;
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    let result = params[0].name + '<br/>';
+                    params.forEach(p => {
+                        result += p.marker + p.seriesName + ': ' + p.value.toFixed(2) + ' Н<br/>';
+                    });
+                    return result;
+                }
+            },
+            legend: {
+                data: ['Сила тяжести', 'Сила Архимеда', 'Сила Стокса'],
+                bottom: 5,
+                textStyle: { fontSize: 10 }
+            },
+            grid: {
+                left: '8%',
+                right: '5%',
+                bottom: '25%',
+                top: '10%',
+                containLabel: false
+            },
+            xAxis: {
+                type: 'category',
+                data: densities.map(d => d + ' кг/м³'),
+                axisLabel: { fontSize: 10, rotate: 15 }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Н',
+                min: 0,
+                max: maxY,
+                axisLabel: {
+                    formatter: function(value) {
+                        if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                        return value.toFixed(1);
+                    }
+                }
+            },
+            series: [
+                {
+                    name: 'Сила тяжести',
+                    type: 'line',
+                    data: gravityData,
+                    smooth: true,
+                    itemStyle: { color: '#ff6384' },
+                    symbolSize: 6
+                },
+                {
+                    name: 'Сила Архимеда',
+                    type: 'line',
+                    data: archimedesData,
+                    smooth: true,
+                    itemStyle: { color: '#36a2eb' },
+                    symbolSize: 6
+                },
+                {
+                    name: 'Сила Стокса',
+                    type: 'line',
+                    data: stokesData,
+                    smooth: true,
+                    itemStyle: { color: '#ffce56' },
+                    symbolSize: 6
+                }
+            ]
+        };
+        densityDependencyChart.setOption(option, true);
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts();
+        calculate();
+    });
+</script>
+</body>
+</html>

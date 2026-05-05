@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моделирование силы Архимеда</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0b0b0f;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #1a1a24;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            border: 1px solid #2a2a35;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c1b4d 0%, #1a1030 100%);
+            color: #ffffff;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 1em;
+            opacity: 0.85;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 15px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .simulation-block {
+                grid-column: span 1 !important;
+            }
+        }
+
+        .panel {
+            background: #21212b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2e2e3a;
+        }
+
+        .panel h2 {
+            color: #b4a7ff;
+            margin-bottom: 18px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #3a3a4a;
+            padding-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #cccccc;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a35;
+            border: 1px solid #3a3a4a;
+            border-radius: 8px;
+            font-size: 0.95em;
+            color: #ffffff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #7c6ff7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25);
+        }
+
+        .input-group .unit {
+            color: #888888;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2c1b4d 0%, #1a1030 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(44, 27, 77, 0.5);
+        }
+
+        .chart-container {
+            background: #1e1e2a;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #2a2a35;
+        }
+
+        .chart-container h3 {
+            color: #cccccc;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+            font-weight: 500;
+        }
+
+        .chart {
+            width: 100%;
+            height: 280px;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-table tr {
+            border-bottom: 1px solid #2a2a35;
+        }
+
+        .details-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .details-table td {
+            padding: 10px 0;
+            color: #dddddd;
+        }
+
+        .details-table td:first-child {
+            color: #aaaaaa;
+            font-weight: 500;
+        }
+
+        .details-table td:last-child {
+            text-align: right;
+            color: #b4a7ff;
+            font-weight: 600;
+        }
+
+        /* --------------------------------------------
+           Блок симуляции – колба, вода, шар, стрелки перелива
+        -------------------------------------------- */
+        .simulation-block {
+            grid-column: span 2;
+            background: #1e1e2a;
+            border-radius: 12px;
+            padding: 20px 15px 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #2a2a35;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 450px;
+        }
+
+        .flask-wrapper {
+            position: relative;
+            width: 160px;
+            height: 500px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        /* Сама колба (мензурка) */
+        .flask {
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            width: 120px;
+            height: 350px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top: none;
+            border-radius: 0 0 30px 30px;
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: inset 0 0 30px rgba(255,255,255,0.1), 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        /* Горлышко колбы */
+        .flask::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 30px;
+            width: 60px;
+            height: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            background: transparent;
+        }
+
+        /* Блик на стекле колбы */
+        .flask::after {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 20px;
+            width: 10px;
+            height: 60%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent);
+            border-radius: 10px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Вода внутри колбы */
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background: 
+                radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.5) 0%, transparent 60%),
+                linear-gradient(180deg, 
+                    rgba(64, 164, 255, 0.35) 0%, 
+                    rgba(32, 128, 255, 0.55) 100%);
+            transition: height 1.5s ease-in-out;
+            border-radius: 0 0 28px 28px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        /* Блики на поверхности воды */
+        .water::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 5%;
+            width: 90%;
+            height: 6px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: shimmer 2s infinite alternate;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.6; transform: scaleX(1); }
+            100% { opacity: 0.9; transform: scaleX(0.8); }
+        }
+
+        /* Шар */
+        .ball {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 35% 35%, 
+                #999 5%, 
+                #333 60%, 
+                #111 100%);
+            border-radius: 50%;
+            left: 40px;
+            bottom: 400px;
+            transition: bottom 1.5s ease-in-out, filter 1.5s ease-in-out;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.9),
+                        0 10px 25px rgba(0,0,0,0.7);
+            z-index: 5;
+            filter: none;
+        }
+
+        /* Блик на шаре */
+        .ball::after {
+            content: '';
+            position: absolute;
+            top: 12%;
+            left: 20%;
+            width: 20%;
+            height: 20%;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        /* Контейнер со стрелками перелива */
+        .overflow-arrows {
+            position: absolute;
+            top: 120px;          /* уровень горлышка */
+            left: 78px;          /* центр горлышка */
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .overflow-arrows.active {
+            opacity: 1;
+        }
+
+        /* Одна стрелка (треугольник цвета воды остриём вверх) */
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 14px solid rgba(64, 164, 255, 0.9);
+            animation: arrowPulse 0.8s ease-in-out infinite alternate;
+        }
+
+        .arrow:nth-child(1) { animation-delay: 0s; }
+        .arrow:nth-child(2) { animation-delay: 0.2s; }
+        .arrow:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes arrowPulse {
+            0% { transform: translateY(0); opacity: 0.7; }
+            100% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        footer {
+            background: #15151e;
+            color: #888888;
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #2a2a35;
+            font-size: 0.85em;
+        }
+
+        .emoji {
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><span class="emoji">🏊</span>Моделирование силы Архимеда</h1>
+        <p>Интерактивный калькулятор с визуализацией сил (ECharts)</p>
+    </header>
+
+    <div class="main-content">
+        <div class="panel">
+            <h2><span class="emoji">📝</span>Введите параметры</h2>
+            <div class="input-group">
+                <label>⚪ Плотность шара</label>
+                <input type="text" id="sphereDensity" value="1000" inputmode="decimal"
+                       oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                <div class="unit">кг/м³</div>
+            </div>
+            <div class="input-group">
+                <label>📏 Радиус шара</label>
+                <input type="text" id="sphereRadius" value="0.1" inputmode="decimal"
+                       oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                <div class="unit">м</div>
+            </div>
+            <div class="input-group">
+                <label>💧 Плотность жидкости</label>
+                <input type="text" id="liquidDensity" value="1000" inputmode="decimal"
+                       oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                <div class="unit">кг/м³</div>
+            </div>
+            <div class="input-group">
+                <label>🔄 Вязкость жидкости</label>
+                <input type="text" id="viscosity" value="0.001" inputmode="decimal"
+                       oninput="this.value = this.value.replace(/[^0-9.,]/g, '').replace(/,/g, '.')">
+                <div class="unit">Па·с</div>
+            </div>
+            <button class="btn-calculate" onclick="calculateAndSimulate()">
+                <span class="emoji">🧮</span>Рассчитать и обновить графики
+            </button>
+        </div>
+
+        <div class="panel">
+            <h2><span class="emoji">📋</span>Детальные параметры</h2>
+            <table class="details-table">
+                <tr><td>Объем шара:</td><td><span id="sphereVolume">0.004189</span> м³</td></tr>
+                <tr><td>Масса шара:</td><td><span id="sphereMass">4.189</span> кг</td></tr>
+                <tr><td>Плотность шара:</td><td><span id="displaySphereDensity">1000.00</span> кг/м³</td></tr>
+                <tr><td>Плотность жидкости:</td><td><span id="displayLiquidDensity">1000.00</span> кг/м³</td></tr>
+                <tr><td>Радиус шара:</td><td><span id="displayRadius">0.100</span> м</td></tr>
+                <tr><td>Вязкость жидкости:</td><td><span id="displayViscosity">0.0010</span> Па·с</td></tr>
+                <tr><td>⚡ Ускорение свободного падения:</td><td>9.81 м/с²</td></tr>
+                <tr><td>🌀 Число Пи:</td><td>3.14159</td></tr>
+                <tr><td>🏃 Скорость (константа):</td><td>1.0 м/с</td></tr>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h3><span class="emoji">📊</span>Сравнение сил (Н)</h3>
+            <div id="forceComparisonChart" class="chart"></div>
+        </div>
+
+        <div class="chart-container">
+            <h3><span class="emoji">📈</span>Зависимость от радиуса</h3>
+            <div id="radiusDependencyChart" class="chart"></div>
+        </div>
+
+        <div class="simulation-block">
+            <div class="flask-wrapper">
+                <div class="flask">
+                    <div class="water" id="waterLevel"></div>
+                </div>
+                <div class="ball" id="ball"></div>
+                <div class="overflow-arrows" id="overflowArrows">
+                    <div class="arrow"></div>
+                    <div class="arrow"></div>
+                    <div class="arrow"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 Архимед Симулятор. Все права защищены.</p>
+    </footer>
+</div>
+
+<script>
+    const G = 9.81;
+    const PI = 3.14159;
+    const VELOCITY = 1.0;
+
+    let forceComparisonChart, radiusDependencyChart;
+
+    function initCharts() {
+        forceComparisonChart = echarts.init(document.getElementById('forceComparisonChart'));
+        radiusDependencyChart = echarts.init(document.getElementById('radiusDependencyChart'));
+
+        window.addEventListener('resize', function() {
+            forceComparisonChart.resize();
+            radiusDependencyChart.resize();
+        });
+    }
+
+    function calculate() {
+        const sphereDensity = parseFloat(document.getElementById('sphereDensity').value) || 0;
+        const sphereRadius = parseFloat(document.getElementById('sphereRadius').value) || 0;
+        const liquidDensity = parseFloat(document.getElementById('liquidDensity').value) || 0;
+        const viscosity = parseFloat(document.getElementById('viscosity').value) || 0;
+
+        const volume = (4/3) * PI * Math.pow(sphereRadius, 3);
+        const mass = sphereDensity * volume;
+        const gravityForce = mass * G;
+        const archimedesForce = liquidDensity * volume * G;
+        const stokesForce = 6 * PI * viscosity * sphereRadius * VELOCITY;
+
+        document.getElementById('sphereVolume').textContent = volume.toFixed(6);
+        document.getElementById('sphereMass').textContent = mass.toFixed(3);
+        document.getElementById('displaySphereDensity').textContent = sphereDensity.toFixed(2);
+        document.getElementById('displayLiquidDensity').textContent = liquidDensity.toFixed(2);
+        document.getElementById('displayRadius').textContent = sphereRadius.toFixed(3);
+        document.getElementById('displayViscosity').textContent = viscosity.toFixed(4);
+
+        updateForceComparisonChart(gravityForce, archimedesForce, stokesForce);
+        updateRadiusDependencyChart();
+    }
+
+    function calculateAndSimulate() {
+        calculate();
+        startSimulation();
+    }
+
+    function startSimulation() {
+        const sphereDensity = parseFloat(document.getElementById('sphereDensity').value) || 1000;
+        const sphereRadius = parseFloat(document.getElementById('sphereRadius').value) || 0.1;
+        const liquidDensity = parseFloat(document.getElementById('liquidDensity').value) || 1000;
+
+        const V_ball = (4/3) * PI * Math.pow(sphereRadius, 3);
+        const mass = sphereDensity * V_ball;
+
+        const r_flask = 0.15;
+        const A_flask = PI * r_flask * r_flask;
+        const h_water0 = 0.3;
+        const V_water0 = h_water0 * A_flask;
+        const pxPerMeter = 400;
+        const maxWaterHeightM = 0.8;
+
+        let V_sub, h_water, bottomBallM;
+        let isOverflow = false;
+
+        if (sphereDensity > liquidDensity) {
+            V_sub = V_ball;
+            h_water = (V_water0 + V_ball) / A_flask;
+            if (h_water > maxWaterHeightM) {
+                h_water = maxWaterHeightM;
+                isOverflow = true;
+            }
+            bottomBallM = 0;   // шар на дне
+        } else {
+            V_sub = mass / liquidDensity;
+            if (V_sub > V_ball) V_sub = V_ball;
+            h_water = (V_water0 + V_sub) / A_flask;
+            if (h_water > maxWaterHeightM) {
+                h_water = maxWaterHeightM;
+                isOverflow = true;
+            }
+            const h_sub = solveH(V_sub, sphereRadius);
+            bottomBallM = h_water - h_sub;
+            if (bottomBallM < 0) bottomBallM = 0;
+        }
+
+        let waterHeightPx = h_water * pxPerMeter;
+        let ballBottomPx = bottomBallM * pxPerMeter;
+
+        const maxWaterPx = 350;
+        const maxBallBottomPx = 420;
+        if (waterHeightPx > maxWaterPx) waterHeightPx = maxWaterPx;
+        if (ballBottomPx > maxBallBottomPx) ballBottomPx = maxBallBottomPx;
+
+        const water = document.getElementById('waterLevel');
+        const ball = document.getElementById('ball');
+        const overflowArrows = document.getElementById('overflowArrows');
+
+        // ----- СБРОС ВСЕХ АНИМАЦИЙ И ПОЛОЖЕНИЙ -----
+        ball.style.transition = 'none';
+        water.style.transition = 'none';
+        water.style.height = '120px';       // начальный уровень воды
+        ball.style.bottom = '400px';       // шар над колбой
+        ball.style.filter = 'none';
+        overflowArrows.classList.remove('active');
+
+        // Принудительная перерисовка, чтобы сброс вступил в силу немедленно
+        void water.offsetHeight;
+
+        // ----- ЭТАП 1: падение шара к поверхности воды (вода неподвижна) -----
+        ball.style.transition = 'bottom 1.5s ease-in-out';
+        const surfacePx = 120;   // начальный уровень воды в пикселях
+        ball.style.bottom = surfacePx + 'px';
+
+        // ----- ЭТАП 2: подъём воды и окончательное погружение -----
+        setTimeout(() => {
+            water.style.transition = 'height 1.5s ease-in-out';
+            ball.style.transition = 'bottom 1.5s ease-in-out, filter 1.5s ease-in-out';
+
+            water.style.height = waterHeightPx + 'px';
+            ball.style.bottom = ballBottomPx + 'px';
+
+            if (isOverflow) {
+                overflowArrows.classList.add('active');
+            } else {
+                overflowArrows.classList.remove('active');
+            }
+
+            // Цвет шара под водой
+            const ballDiameterPx = 80;
+            const submergedPx = Math.max(0, waterHeightPx - ballBottomPx);
+            let fraction = Math.min(1, submergedPx / ballDiameterPx);
+            if (fraction < 0) fraction = 0;
+
+            if (fraction > 0.01) {
+                ball.style.filter = `brightness(${1 - fraction * 0.5}) saturate(${1 - fraction * 0.3}) hue-rotate(${fraction * 15}deg)`;
+            } else {
+                ball.style.filter = 'none';
+            }
+        }, 1500);
+    }
+
+    function solveH(V, R) {
+        if (V <= 0) return 0;
+        const V_total = (4/3) * PI * Math.pow(R, 3);
+        if (V >= V_total) return 2 * R;
+        let low = 0, high = 2 * R;
+        for (let i = 0; i < 50; i++) {
+            const mid = (low + high) / 2;
+            const V_mid = (PI / 3) * mid * mid * (3 * R - mid);
+            if (V_mid < V) low = mid;
+            else high = mid;
+        }
+        return (low + high) / 2;
+    }
+
+    function updateForceComparisonChart(gravityForce, archimedesForce, stokesForce) {
+        const maxValue = Math.max(gravityForce, archimedesForce, stokesForce);
+        const yAxisMax = maxValue > 0 ? Math.ceil(maxValue * 1.3) : 10;
+
+        const option = {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    return params[0].name + ': ' + params[0].value.toFixed(2) + ' Н';
+                }
+            },
+            grid: {
+                left: '8%',
+                right: '5%',
+                bottom: '8%',
+                top: '15%',
+                containLabel: false
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Сила тяжести', 'Сила Архимеда', 'Сила Стокса'],
+                axisLabel: { fontSize: 10, color: '#aaa' },
+                axisLine: { lineStyle: { color: '#3a3a4a' } }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Н',
+                min: 0,
+                max: yAxisMax,
+                nameTextStyle: { color: '#aaa' },
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: function(value) {
+                        if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                        return value.toFixed(1);
+                    }
+                },
+                splitLine: { lineStyle: { color: '#2a2a35' } }
+            },
+            series: [{
+                type: 'bar',
+                data: [
+                    parseFloat(gravityForce.toFixed(1)),
+                    parseFloat(archimedesForce.toFixed(1)),
+                    parseFloat(stokesForce.toFixed(2))
+                ],
+                itemStyle: {
+                    color: function(params) {
+                        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d'];
+                        return colors[params.dataIndex];
+                    }
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return params.value.toFixed(2) + ' Н';
+                    },
+                    fontSize: 9,
+                    color: '#ddd'
+                },
+                barWidth: '50%'
+            }]
+        };
+        forceComparisonChart.setOption(option, true);
+    }
+
+    function updateRadiusDependencyChart() {
+        const sphereDensity = parseFloat(document.getElementById('sphereDensity').value) || 1000;
+        const liquidDensity = parseFloat(document.getElementById('liquidDensity').value) || 1000;
+        const viscosity = parseFloat(document.getElementById('viscosity').value) || 0.001;
+
+        const radii = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3];
+        const gravityData = [];
+        const archimedesData = [];
+        const stokesData = [];
+
+        radii.forEach(r => {
+            const volume = (4/3) * PI * Math.pow(r, 3);
+            const mass = sphereDensity * volume;
+            gravityData.push(parseFloat((mass * G).toFixed(1)));
+            archimedesData.push(parseFloat((liquidDensity * volume * G).toFixed(1)));
+            stokesData.push(parseFloat((6 * PI * viscosity * r * VELOCITY).toFixed(2)));
+        });
+
+        const allValues = [...gravityData, ...archimedesData, ...stokesData];
+        const maxY = Math.max(...allValues) * 1.2;
+
+        const option = {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    let result = params[0].name + '<br/>';
+                    params.forEach(p => {
+                        result += p.marker + p.seriesName + ': ' + p.value.toFixed(2) + ' Н<br/>';
+                    });
+                    return result;
+                }
+            },
+            legend: {
+                data: ['Сила тяжести', 'Сила Архимеда', 'Сила Стокса'],
+                bottom: 5,
+                textStyle: { fontSize: 9, color: '#aaa' }
+            },
+            grid: {
+                left: '8%',
+                right: '5%',
+                bottom: '22%',
+                top: '10%',
+                containLabel: false
+            },
+            xAxis: {
+                type: 'category',
+                data: radii.map(r => r + ' м'),
+                axisLabel: { fontSize: 9, color: '#aaa' },
+                axisLine: { lineStyle: { color: '#3a3a4a' } }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Н',
+                min: 0,
+                max: maxY,
+                nameTextStyle: { color: '#aaa' },
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: function(value) {
+                        if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+                        return value.toFixed(1);
+                    }
+                },
+                splitLine: { lineStyle: { color: '#2a2a35' } }
+            },
+            series: [
+                {
+                    name: 'Сила тяжести',
+                    type: 'line',
+                    data: gravityData,
+                    smooth: true,
+                    itemStyle: { color: '#ff6b6b' },
+                    symbolSize: 5
+                },
+                {
+                    name: 'Сила Архимеда',
+                    type: 'line',
+                    data: archimedesData,
+                    smooth: true,
+                    itemStyle: { color: '#4ecdc4' },
+                    symbolSize: 5
+                },
+                {
+                    name: 'Сила Стокса',
+                    type: 'line',
+                    data: stokesData,
+                    smooth: true,
+                    itemStyle: { color: '#ffe66d' },
+                    symbolSize: 5
+                }
+            ]
+        };
+        radiusDependencyChart.setOption(option, true);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts();
+        calculate();
+    });
+</script>
+</body>
+</html>

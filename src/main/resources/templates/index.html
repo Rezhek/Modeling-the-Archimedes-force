@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Моделирование силы Архимеда</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" th:href="@{/style.css}">
 </head>
 <body>
 <div class="container">
@@ -14,27 +14,44 @@
         <p>Интерактивный калькулятор с визуализацией сил (ECharts)</p>
     </header>
 
+    <!-- Передача констант из Constants.java -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.CONSTANTS = {
+            G: /*[[${g}]]*/ 9.81,
+            PI: /*[[${pi}]]*/ 3.14159265359,
+            VELOCITY: /*[[${velocity}]]*/ 3.0,
+            DEFAULT_BALL_DENSITY: /*[[${defaultBallDensity}]]*/ 1000,
+            DEFAULT_LIQUID_DENSITY: /*[[${defaultLiquidDensity}]]*/ 1000,
+            DEFAULT_RADIUS: /*[[${defaultRadius}]]*/ 0.1,
+            DEFAULT_MASS: /*[[${defaultMass}]]*/ 1.0,
+            DEFAULT_VOLUME: /*[[${defaultVolume}]]*/ 0.00418879,
+            DEFAULT_VISCOSITY: /*[[${defaultViscosity}]]*/ 0.001
+        };
+        /*]]>*/
+    </script>
+
     <div class="main-content">
         <div class="panel">
             <h2><span class="emoji">📝</span>Введите параметры</h2>
             <div class="input-group">
                 <label>⚪ Плотность шара</label>
-                <input type="text" id="sphereDensity" value="1000" inputmode="decimal">
+                <input type="text" id="sphereDensity" th:value="${defaultBallDensity}" inputmode="decimal">
                 <div class="unit">кг/м³</div>
             </div>
             <div class="input-group">
                 <label>📏 Радиус шара</label>
-                <input type="text" id="sphereRadius" value="0.1" inputmode="decimal">
+                <input type="text" id="sphereRadius" th:value="${defaultRadius}" inputmode="decimal">
                 <div class="unit">м</div>
             </div>
             <div class="input-group">
                 <label>💧 Плотность жидкости</label>
-                <input type="text" id="liquidDensity" value="1000" inputmode="decimal">
+                <input type="text" id="liquidDensity" th:value="${defaultLiquidDensity}" inputmode="decimal">
                 <div class="unit">кг/м³</div>
             </div>
             <div class="input-group">
                 <label>🔄 Вязкость жидкости</label>
-                <input type="text" id="viscosity" value="0.001" inputmode="decimal">
+                <input type="text" id="viscosity" th:value="${defaultViscosity}" inputmode="decimal">
                 <div class="unit">Па·с</div>
             </div>
             <button class="btn-calculate" id="calcBtn">
@@ -51,9 +68,9 @@
                 <tr><td>Плотность жидкости:</td><td><span id="displayLiquidDensity">1000.00</span> кг/м³</td></tr>
                 <tr><td>Радиус шара:</td><td><span id="displayRadius">0.100</span> м</td></tr>
                 <tr><td>Вязкость жидкости:</td><td><span id="displayViscosity">0.0010</span> Па·с</td></tr>
-                <tr><td>Ускорение свободного падения:</td><td>9.81 м/с²</td></tr>
-                <tr><td>Число Пи:</td><td>3.14159</td></tr>
-                <tr><td>Скорость (константа):</td><td>1.0 м/с</td></tr>
+                <tr><td>Ускорение свободного падения:</td><td><span id="displayG" th:text="${g}">9.81</span> м/с²</td></tr>
+                <tr><td>Число Пи:</td><td><span id="displayPi" th:text="${pi}">3.14159</span></td></tr>
+                <tr><td>Скорость (константа):</td><td><span id="displayVelocity" th:text="${velocity}">3.0</span> м/с</td></tr>
             </table>
         </div>
 
@@ -68,7 +85,6 @@
         </div>
 
         <div class="simulation-block">
-            <!-- НОВЫЙ СТИЛИЗОВАННЫЙ ИНФОРМАЦИОННЫЙ БЛОК -->
             <div class="info-card" id="infoBlock">
                 <div class="info-header">
                     <span class="info-icon">⚖️</span>
@@ -110,6 +126,6 @@
     </footer>
 </div>
 
-<script src="script.js"></script>
+<script th:src="@{/script.js}"></script>
 </body>
 </html>

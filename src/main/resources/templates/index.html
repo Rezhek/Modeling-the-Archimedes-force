@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Феноменольно</title>
+  <link rel="stylesheet" href="../static/index.css" th:href="@{/index.css}">
+</head>
+
+<body>
+
+  <!-- Particle canvas -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="/" th:href="@{/}" class="header-logo">
+        <!-- BookOpen icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </a>
+      <div class="header-text">
+        <h1>Физическая лаборатория</h1>
+        <p>Интерактивные проекты по физике</p>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number">4</div>
+          <div class="stat-label">проекта</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">разработчиков</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">AI</div>
+          <div class="stat-label">power</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <!-- Hero -->
+    <div class="hero"> <!-- TODO-->
+      <h2>Если не знать магию,<br><span>то всё кажется физикой</span></h2>
+      <p>Проекты студентов ИРНИТУ, объединённые в одну лабораторию. Симуляции и задачи, чтобы физика перестала быть
+        скучной.</p>
+      <div class="hero-features">
+        <div class="feature-pill">
+          <!-- play icon -->
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          Наглядные анимации
+        </div>
+        <div class="feature-pill">
+          <!-- check icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Интерактивные параметры
+        </div>
+        <div class="feature-pill">
+          <!-- star icon -->
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          Бесплатно для всех
+        </div>
+      </div>
+    </div>
+
+    <!-- Topics -->
+    <div class="section-label">Для начала выберите тему</div>
+
+    <div class="topics-grid" id="topics-grid">
+      <!-- Cards injected by JS -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    Физическая лаборатория &nbsp;·&nbsp; Сделано в <a href="https://www.istu.edu/" target="_blank">ИРНИТУ</a>
+    &nbsp;·&nbsp; Специально для студентов
+  </footer>
+
+  <script src="../../../../../src/main/resources/static/particles.js" th:src="@{/particles.js}"></script>
+  <script src="../../../../../src/main/resources/static/index.js" th:src="@{/index.js}"></script>
+</body>
+
+</html>

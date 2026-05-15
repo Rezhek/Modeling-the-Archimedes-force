@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Построение изображений в линзе</title>
+    <link rel="stylesheet" th:href="@{/index.css}">
+    <link rel="stylesheet" th:href="@{/lens/style.css}">
+</head>
+<body>
+
+  <!-- Particle canvas -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="/" th:href="@{/}" class="back-link" title="Назад на главную">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </a>
+      <a href="/" th:href="@{/}" class="header-logo">
+        <!-- BookOpen icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </a>
+      <div class="header-text">
+        <h1>Физическая лаборатория</h1>
+        <p>Интерактивные проекты по физике</p>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number">4</div>
+          <div class="stat-label">проекта</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">разработчиков</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">AI</div>
+          <div class="stat-label">power</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+<main>
+<div class="main-layout">
+    <div class="simulation-view">
+        <canvas id="opticsCanvas"></canvas>
+        <div class="zoom-controls">
+            <span class="zoom-icon">🔍</span>
+            <div class="zoom-buttons">
+                <button onclick="changeZoom(1.2)">+</button>
+                <button onclick="changeZoom(0.8)">-</button>
+            </div>
+            <div id="zoom-level" class="zoom-level">100%</div>
+        </div>
+    </div>
+
+    <div class="side-panel">
+        <div class="glass-card">
+            <label>Тип линзы</label>
+            <select id="lens-type">
+                <option value="converging">Собирающая (Выпуклая)</option>
+                <option value="diverging">Рассеивающая (Вогнутая)</option>
+            </select>
+
+            <label>Предмет</label>
+            <select id="obj-type">
+                <option value="arrow">Стрелка</option>
+                <option value="pencil">Карандаш</option>
+                <option value="candle">Свеча</option>
+                <option value="book">Книга по вайбкодингу</option>
+            </select>
+
+            <label>Фокус (F)
+                <div class="input-wrapper">
+                    <input type="number" id="num-f" class="val-input" th:value="${lensModel.focus}"> <span>см</span>
+                </div>
+            </label>
+            <input type="range" id="f-range" min="1" max="100" th:value="${lensModel.focus}">
+
+            <label>Расстояние до предмета (d)
+                <div class="input-wrapper">
+                    <input type="number" id="num-d" class="val-input" th:value="${lensModel.objectDistance}"> <span>см</span>
+                </div>
+            </label>
+            <input type="range" id="d-range" min="1" max="100" th:value="${lensModel.objectDistance}">
+
+            <label>Высота (h)
+                <div class="input-wrapper">
+                    <input type="number" id="num-h" class="val-input" th:value="${lensModel.objectHeight}"> <span>см</span>
+                </div>
+            </label>
+            <input type="range" id="h-range" min="1" max="100" th:value="${lensModel.objectHeight}">
+        </div>
+
+        <div class="glass-card">
+            <label>Текущие результаты</label>
+            <div class="res-row"><span>Расстояние до изображения (f)</span><span class="res-val" id="r-f">-</span></div>
+            <div class="res-row"><span>Высота (H)</span><span class="res-val" id="r-H">-</span></div>
+            <div class="res-row"><span>Увеличение (G)</span><span class="res-val" id="r-g">-</span></div>
+            <div id="r-type" style="color: var(--accent-purple); font-size: 1rem; margin-top: 8px; font-weight: 600; text-transform: uppercase;">-</div>
+        </div>
+
+        <div class="glass-card">
+            <label>Журнал измерений</label>
+            <div class="measurements-log">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>f</th>
+                        <th>H</th>
+                    </tr>
+                    </thead>
+                    <tbody id="log-body">
+                    <tr th:each="measure, iterStat : ${measurements}">
+                        <td th:text="${iterStat.index + 1}"></td>
+                        <td th:text="${#numbers.formatDecimal(measure.imageDistance, 1, 1)}"></td>
+                        <td th:text="${#numbers.formatDecimal(measure.imageHeight, 1, 1)}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="error-box">
+                <div class="err-line">
+                    <span>Системная погрешность:</span>
+                    <span th:text="${errorStats.systematicError} + ' см'">0.10 см</span>
+                </div>
+                <div class="err-line" style="margin-top:8px; font-weight:600; color:var(--accent-cyan)">
+                    <span>ИТОГО Δf:</span>
+                    <span id="err-total-f" th:text="${errorStats.totalErrorF} + ' см'">0.10 см</span>
+                </div>
+                <div class="err-line" style="margin-top:4px; font-weight:600; color:var(--accent-purple)">
+                    <span>ИТОГО ΔH:</span>
+                    <span id="err-total-h" th:text="${errorStats.totalErrorH} + ' см'">0.10 см</span>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-add" onclick="addMeasurement()">ДОБАВИТЬ</button>
+                <button class="btn btn-reset" onclick="resetMeasurements()">СБРОС</button>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+
+  <!-- Footer -->
+  <footer>
+    Физическая лаборатория &nbsp;·&nbsp; Сделано в <a href="https://www.istu.edu/" target="_blank">ИРНИТУ</a>
+    &nbsp;·&nbsp; Специально для студентов
+  </footer>
+
+<script th:src="@{/particles.js}"></script>
+<script th:src="@{/lens/script.js}"></script>
+</body>
+</html>

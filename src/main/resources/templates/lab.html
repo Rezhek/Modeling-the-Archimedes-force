@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Лабораторная работа: Изотерма</title>
+    <link rel="stylesheet" th:href="@{/index.css}">
+    <style>
+        /* Главный контейнер, который делит экран */
+        .wrapper {
+            display: flex;
+            gap: 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+
+        /* Левая колонка (30% ширины) */
+        .sidebar {
+            flex: 0 0 420px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 32px;
+            border-radius: 32px;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Правая колонка (70% ширины) */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 32px;
+            border-radius: 32px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            animation: cardIn 0.5s ease forwards;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .custom-select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background-color: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .custom-select:focus {
+            outline: none;
+            border-color: #818cf8;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b82f6, #9333ea);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(147, 51, 234, 0.4);
+        }
+        h2, h3, h4 { color: #fff; margin-top: 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px; font-size: 1.5rem; }
+        .form-group { margin-bottom: 24px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 16px; color: var(--purple-300); }
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .status { font-style: italic; color: var(--purple-300); margin-top: 15px; display: block; font-size: 15px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 15px; border: 1px solid var(--glass-border); text-align: left; font-size: 16px; }
+        th { background-color: rgba(255,255,255,0.05); color: var(--purple-300); }
+        td { color: #fff; }
+        .table-wrapper { max-height: 400px; overflow-y: auto; border: 1px solid var(--glass-border); border-radius: 12px; }
+
+        .slider-box { margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.05); border-radius: 16px; text-align: center; }
+        input[type="range"] { width: 100%; margin: 15px 0; accent-color: #818cf8; height: 8px; }
+    </style>
+</head>
+<body>
+
+  <!-- Particle canvas -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="/" th:href="@{/}" class="back-link" title="Назад на главную">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </a>
+      <a href="/" th:href="@{/}" class="header-logo">
+        <!-- BookOpen icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </a>
+      <div class="header-text">
+        <h1>Физическая лаборатория</h1>
+        <p>Интерактивные проекты по физике</p>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number">4</div>
+          <div class="stat-label">проекта</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">разработчиков</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">AI</div>
+          <div class="stat-label">power</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+<main>
+<div class="wrapper">
+    <div class="sidebar">
+        <form th:action="@{/lab/calculate}" method="post">
+            <h3 style="margin-top: 0;">Параметры</h3>
+
+            <div class="form-group"> <label>Выберите газ:</label>
+                <select name="gasName" id="gasSelect" onchange="this.form.submit()" class="custom-select">
+                    <option value="Воздух" th:selected="${gasModel.MolarMass == 0.029}">Воздух</option>
+                    <option value="Кислород" th:selected="${gasModel.MolarMass == 0.032}">Кислород (O₂)</option>
+                    <option value="Азот" th:selected="${gasModel.MolarMass == 0.028}">Азот (N₂)</option>
+                    <option value="Гелий" th:selected="${gasModel.MolarMass == 0.004}">Гелий (He)</option>
+                    <option value="Другой газ" th:selected="${gasModel.isCustomMolarMass()}">Другой газ</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="molarMassGroup">
+                <label>Молярная масса (кг/моль):</label>
+                <input type="number" step="0.001" name="MolarMass" id="molarMassInput" th:value="${gasModel.MolarMass}">
+            </div>
+
+            <div class="form-group">
+                <label>Масса газа (кг):</label>
+                <input type="number" step="0.001" name="Mass" th:value="${gasModel.Mass}">
+            </div>
+
+            <div class="form-group">
+                <label>Начальный объем V₁ (м³):</label>
+                <input type="number" step="0.1" name="Volume" th:value="${gasModel.Volume}">
+            </div>
+
+            <div class="form-group">
+                <label>Температура (К):</label>
+                <input type="number" name="Temperature" th:value="${gasModel.Temperature}">
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--glass-border);">
+
+            <div class="experiment-visual" style="display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--glass-border); width: fit-content;">
+                <h4 style="margin-top: 0; color: #fff;">Визуализация объема V₂</h4>
+
+                <div style="display: flex; align-items: flex-start; gap: 0; height: 300px; position: relative; padding-right: 40px;">
+
+                    <div class="ruler" style="height: 100%; border-right: 2px solid rgba(255,255,255,0.3); position: relative; width: 50px; font-family: monospace; font-size: 12px; color: var(--purple-300);">
+                        <span style="position: absolute; top: 0; right: 8px; transform: translateY(-50%);">250 —</span>
+                        <span style="position: absolute; top: 20%; right: 8px; transform: translateY(-50%);">200 —</span>
+                        <span style="position: absolute; top: 40%; right: 8px; transform: translateY(-50%);">150 —</span>
+                        <span style="position: absolute; top: 60%; right: 8px; transform: translateY(-50%);">100 —</span>
+                        <span style="position: absolute; top: 80%; right: 8px; transform: translateY(-50%);">50 —</span>
+                        <span style="position: absolute; top: 100%; right: 8px; transform: translateY(-50%);">0 —</span>
+                    </div>
+
+                    <div id="flask" style="width: 80px; height: 300px; border: 3px solid rgba(255,255,255,0.3); border-top: none; position: relative; background: rgba(255,255,255,0.05); border-radius: 0 0 15px 15px; overflow: hidden; box-shadow: inset 5px 0 10px rgba(0,0,0,0.2); margin-left: -2px;">
+                        <div id="gas-fill" th:style="'position: absolute; bottom: 0; width: 100%; background: linear-gradient(90deg, #3b82f6 0%, #9333ea 50%, #3b82f6 100%); opacity: 0.8; transition: height 0.1s linear; height:' + (${gasModel.PostVolume} / 250 * 100) + '%;'"></div>
+                    </div>
+
+                    <div style="height: 300px; margin-left: 20px;">
+                        <input type="range" id="v2_slider" name="PostVolume" min="0" max="250" step="0.01"
+                               th:value="${gasModel.PostVolume}"
+                               style="writing-mode: vertical-lr; direction: rtl; height: 100%; width: 10px; padding: 0; margin: 0; cursor: pointer;">
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; font-size: 1.2em; font-weight: bold; background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 10px; border: 1px solid var(--glass-border);">
+                    V₂ = <span id="v2_display" style="color: #818cf8;" th:text="${gasModel.PostVolume}"></span> м³
+                </div>
+            </div>
+
+            <button type="submit" class="btn-calculate" style="margin-top: 20px;">Рассчитать и записать</button>
+        </form>
+    </div>
+
+    <div class="main-content">
+        <div class="card" th:if="${gasModel.IsValid}">
+            <h3>График процесса (P-V изотерма)</h3>
+            <canvas id="isothermChart" style="max-height: 400px;"></canvas>
+        </div>
+
+        <div class="card" th:if="${not #lists.isEmpty(gasModel.history)}">
+            <h3>Журнал опытов</h3>
+            <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                <form th:action="@{/lab/updateReliability}" method="post" style="display: flex; align-items: center; gap: 10px;">
+                    <label style="margin: 0;">Доверительная вероятность (α):</label>
+                    <select name="reliability" onchange="this.form.submit()" style="padding: 5px; border-radius: 4px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid var(--glass-border);">
+                        <option th:each="rel : ${T(com.example.physic.modules.lab.Errors.Reliability).values()}"
+                                th:value="${rel.name()}"
+                                th:text="${rel.value}"
+                                th:selected="${rel == gasModel.errors.reliability}">
+                        </option>
+                    </select>
+                </form>
+                <div style="margin-left: auto; font-weight: bold; color: #fff;">
+                    Погрешность ΔV: <span th:text="${gasModel.errors.finalVolumeError}">0.0</span> м³
+                </div>
+                <div style="margin-left: auto; font-weight: bold; color: #fff;">
+                    <p>Расчетная погрешность давления: <span th:text="${gasModel.pressureError}">0.0</span> Па</p>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>V (м³)</th>
+                        <th>P (Па)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="res, iter : ${gasModel.history}">
+                        <td th:text="${iter.count}"></td>
+                        <td th:text="${res.finalVolume}"></td>
+                        <td th:text="${res.finalPressure}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+
+  <!-- Footer -->
+  <footer>
+    Физическая лаборатория &nbsp;·&nbsp; Сделано в <a href="https://www.istu.edu/" target="_blank">ИРНИТУ</a>
+    &nbsp;·&nbsp; Специально для студентов
+  </footer>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    window.gasData = {
+        currentP: /*[[${gasModel.Pressure}]]*/ 0,
+        currentV: /*[[${gasModel.Volume}]]*/ 0,
+        postP: /*[[${gasModel.PostPressure}]]*/ 0,
+        postV: /*[[${gasModel.PostVolume}]]*/ 0,
+        mass: /*[[${gasModel.Mass}]]*/ 0,
+        molarMass: /*[[${gasModel.MolarMass}]]*/ 0,
+        temp: /*[[${gasModel.Temperature}]]*/ 0,
+        R: 8.31
+    };
+</script>
+<script th:src="@{/particles.js}"></script>
+<script th:src="@{/lab/mychart.js}"></script>
+<script>
+    (function() {
+        const slider = document.getElementById('v2_slider');
+        const v2Display = document.getElementById('v2_display');
+
+        if(slider && v2Display) {
+            slider.addEventListener('input', function() {
+                v2Display.textContent = parseFloat(this.value).toFixed(2);
+            });
+        }
+    })();
+</script>
+<script>
+    (function() {
+        function updateMolarMassState() {
+            const select = document.getElementById('gasSelect');
+            const input = document.getElementById('molarMassInput');
+            if (!select || !input) return;
+
+            if (select.value === 'Другой газ') {
+                input.readOnly = false;
+                input.style.backgroundColor = "rgba(255,255,255,0.05)";
+            } else {
+                input.readOnly = true;
+                input.style.backgroundColor = "rgba(0,0,0,0.1)";
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateMolarMassState);
+        const gasSelect = document.getElementById('gasSelect');
+        if (gasSelect) gasSelect.addEventListener('change', updateMolarMassState);
+    })();
+</script>
+</body>
+</html>

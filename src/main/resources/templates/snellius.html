@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>OptiLab - Симуляция закона Снеллиуса</title>
+    <link rel="stylesheet" th:href="@{/index.css}">
+    <link rel="stylesheet" th:href="@{/snellius/style.css}">
+</head>
+<body>
+
+  <!-- Particle canvas -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="/" th:href="@{/}" class="back-link" title="Назад на главную">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </a>
+      <a href="/" th:href="@{/}" class="header-logo">
+        <!-- BookOpen icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </a>
+      <div class="header-text">
+        <h1>Физическая лаборатория</h1>
+        <p>Интерактивные проекты по физике</p>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+            <select id="langSwitcher" class="lang-selector-mini" onchange="changeLanguage()">
+                <option value="ru">RU</option>
+                <option value="en">EN</option>
+                <option value="de">DE</option>
+            </select>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">4</div>
+          <div class="stat-label">проекта</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">разработчиков</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+<main>
+<div class="glass-container">
+    <div id="notebook" class="notebook-panel">
+        <h2 id="notebookTitle">Лабораторный журнал</h2>
+        <div class="notebook-content">
+            <p>n₁ = <span id="noteN1" th:text="${n1}">1.0</span></p>
+            <p>n₂ = <span id="noteN2" th:text="${n2}">1.5</span></p>
+            <hr>
+            <div id="experimentLogs">
+                <i>Записей пока нет...</i>
+            </div>
+            <hr>
+            <div id="errorCalculations" style="margin-top: 10px; font-size: 0.85em; min-height: 150px;">
+                <p>Ожидание данных для отчета...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="simulation-area">
+        <canvas id="opticsCanvas" width="600" height="600"></canvas>
+    </div>
+
+    <div class="controls">
+        <h1 class="neon-text" id="mainTitle">OptiLab</h1>
+
+        <div class="control-group">
+            <label class="neon-text" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="errorToggle" onchange="toggleErrorMode()">
+                Режим лабораторной работы
+            </label>
+        </div>
+
+        <button id="studentBtn" class="btn-student" style="display: none; margin-top: 10px;" onclick="openStudentTable()">
+            Настроить выборку (n)
+        </button>
+
+        <div class="control-group">
+            <label for="angleSlider" id="labelAngle">Угол падения: <span id="angleValue">30</span>°</label>
+            <input type="range" id="angleSlider" min="0" max="90" step="1"
+                   value="30" oninput="syncAngle()">
+        </div>
+
+        <div class="control-group">
+            <label for="systErrorSelect" id="labelDevice">Измерительный прибор:</label>
+            <select id="systErrorSelect" onchange="updateSystematicError()">
+                <option value="1.0">Учебный экранный (цена деления: 1.0°)</option>
+                <option value="0.5" selected>Стандартный транспортир (цена деления: 0.5°)</option>
+                <option value="0.2">Лабораторный лимб (цена деления: 0.2°)</option>
+                <option value="0.1">Прецизионный гониометр (цена деления: 0.1°)</option>
+                <option value="0.05">Оптический делитель (цена деления: 0.05°)</option>
+            </select>
+            <small id="divisionValue" style="color: #00ffff; font-size: 10px; margin-top: 4px;">
+                Текущая погрешность прибора (Δsyst): ±0.5°
+            </small>
+        </div>
+
+        <div class="control-group">
+            <label for="n1Select" id="labelMed1">Среда 1 (n₁)</label>
+            <select id="n1Select" onchange="updateSimulation()">
+                <option value="1.0" selected>Воздух (1.0)</option>
+                <option value="1.33">Вода (1.33)</option>
+                <option value="1.46">Кварц (1.46)</option>
+                <option value="1.5">Стекло (1.5)</option>
+                <option value="1.62">Флинтглас (1.62)</option>
+                <option value="1.77">Сапфир (1.77)</option>
+                <option value="2.42">Алмаз (2.42)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="n2Select" id="labelMed2">Среда 2 (n₂)</label>
+            <select id="n2Select" onchange="updateSimulation()">
+                <option value="1.0" selected>Воздух (1.0)</option>
+                <option value="1.33">Вода (1.33)</option>
+                <option value="1.46">Кварц (1.46)</option>
+                <option value="1.5">Стекло (1.5)</option>
+                <option value="1.62">Флинтглас (1.62)</option>
+                <option value="1.77">Сапфир (1.77)</option>
+                <option value="2.42">Алмаз (2.42)</option>
+            </select>
+        </div>
+
+        <button class="btn-student" id="saveBtn" style="display: none;" onclick="saveExperiment()">Записать результат</button>
+        <button class="btn-student" id="reportBtn" style="display: none; background: rgba(255,165,0,0.2); border-color: orange; color: orange;" onclick="generateReport()">Сгенерировать отчет</button>
+
+        <div class="result-box">
+            <span id="labelResult">Измеренный угол</span>
+            <div class="result-value neon-text">
+                <span id="resultValue">--</span>°
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+
+<div id="studentModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div style="background: white; color: #333; padding: 25px; border-radius: 15px; max-width: 90%; max-height: 90vh; overflow: auto;">
+        <h3 style="margin-bottom: 15px; border-bottom: 2px solid #00ffff;">Таблица Стьюдента: Выбор объема выборки (n)</h3>
+        <p style="font-size: 12px; margin-bottom: 15px; color: #666;">Выберите количество опытов (строка n) и доверительную вероятность (столбец P).</p>
+        <table id="studentTableDisplay" style="width: 100%; border-collapse: collapse; text-align: center; font-family: monospace;">
+        </table>
+        <button class="btn-student" style="margin-top: 20px; width: 100%; background: #333;" onclick="closeStudentTable()">Закрыть</button>
+    </div>
+</div>
+
+  <!-- Footer -->
+  <footer>
+    Физическая лаборатория &nbsp;·&nbsp; Сделано в <a href="https://www.istu.edu/" target="_blank">ИРНИТУ</a>
+    &nbsp;·&nbsp; Специально для студентов
+  </footer>
+
+<script th:src="@{/particles.js}"></script>
+<script th:src="@{/snellius/script.js}"></script>
+</body>
+</html>

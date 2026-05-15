@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моделирование силы Архимеда</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" th:href="@{/archimed/style.css}">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><span class="emoji">🏊</span>Моделирование силы Архимеда</h1>
+        <p>Интерактивный калькулятор с визуализацией сил (ECharts)</p>
+    </header>
+
+    <!-- Передача констант из Constants.java -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.CONSTANTS = {
+            G: /*[[${g}]]*/ 9.81,
+            PI: /*[[${pi}]]*/ 3.14159265359,
+            VELOCITY: /*[[${velocity}]]*/ 3.0,
+            DEFAULT_BALL_DENSITY: /*[[${defaultBallDensity}]]*/ 1000,
+            DEFAULT_LIQUID_DENSITY: /*[[${defaultLiquidDensity}]]*/ 1000,
+            DEFAULT_RADIUS: /*[[${defaultRadius}]]*/ 0.1,
+            DEFAULT_MASS: /*[[${defaultMass}]]*/ 1.0,
+            DEFAULT_VOLUME: /*[[${defaultVolume}]]*/ 0.00418879,
+            DEFAULT_VISCOSITY: /*[[${defaultViscosity}]]*/ 0.001
+        };
+        /*]]>*/
+    </script>
+
+    <div class="main-content">
+        <div class="panel">
+            <h2><span class="emoji">📝</span>Введите параметры</h2>
+            <div class="input-group">
+                <label>⚪ Плотность шара</label>
+                <input type="text" id="sphereDensity" th:value="${defaultBallDensity}" inputmode="decimal">
+                <div class="unit">кг/м³</div>
+            </div>
+            <div class="input-group">
+                <label>📏 Радиус шара</label>
+                <input type="text" id="sphereRadius" th:value="${defaultRadius}" inputmode="decimal">
+                <div class="unit">м</div>
+            </div>
+            <div class="input-group">
+                <label>💧 Плотность жидкости</label>
+                <input type="text" id="liquidDensity" th:value="${defaultLiquidDensity}" inputmode="decimal">
+                <div class="unit">кг/м³</div>
+            </div>
+            <div class="input-group">
+                <label>🔄 Вязкость жидкости</label>
+                <input type="text" id="viscosity" th:value="${defaultViscosity}" inputmode="decimal">
+                <div class="unit">Па·с</div>
+            </div>
+            <button class="btn-calculate" id="calcBtn">
+                <span class="emoji">🧮</span>Рассчитать и обновить графики
+            </button>
+        </div>
+
+        <div class="panel">
+            <h2><span class="emoji">📋</span>Детальные параметры</h2>
+            <table class="details-table">
+                <tr><td>Объем шара:</td><td><span id="sphereVolume">0.004189</span> м³</td></tr>
+                <tr><td>Масса шара:</td><td><span id="sphereMass">4.189</span> кг</td></tr>
+                <tr><td>Плотность шара:</td><td><span id="displaySphereDensity">1000.00</span> кг/м³</td></tr>
+                <tr><td>Плотность жидкости:</td><td><span id="displayLiquidDensity">1000.00</span> кг/м³</td></tr>
+                <tr><td>Радиус шара:</td><td><span id="displayRadius">0.100</span> м</td></tr>
+                <tr><td>Вязкость жидкости:</td><td><span id="displayViscosity">0.0010</span> Па·с</td></tr>
+                <tr><td>Ускорение свободного падения:</td><td><span id="displayG" th:text="${g}">9.81</span> м/с²</td></tr>
+                <tr><td>Число Пи:</td><td><span id="displayPi" th:text="${pi}">3.14159</span></td></tr>
+                <tr><td>Скорость (константа):</td><td><span id="displayVelocity" th:text="${velocity}">3.0</span> м/с</td></tr>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h3><span class="emoji">📊</span>Сравнение сил (Н)</h3>
+            <div id="forceComparisonChart" class="chart"></div>
+        </div>
+
+        <div class="chart-container">
+            <h3><span class="emoji">📈</span>Зависимость от радиуса</h3>
+            <div id="radiusDependencyChart" class="chart"></div>
+        </div>
+
+        <div class="simulation-block">
+            <div class="info-card" id="infoBlock">
+                <div class="info-header">
+                    <span class="info-icon">⚖️</span>
+                    <span class="info-title">Анализ плавучести</span>
+                </div>
+                <div class="info-content">
+                    <div class="info-row" id="infoStateRow">
+                        <span class="info-label">Состояние:</span>
+                        <span class="info-value" id="infoState">—</span>
+                    </div>
+                    <div class="info-row" id="infoVolumeRow">
+                        <span class="info-label">Погружённый объём:</span>
+                        <span class="info-value" id="infoVolume">—</span>
+                    </div>
+                    <div class="info-row" id="infoWaterRow">
+                        <span class="info-label">Уровень воды:</span>
+                        <span class="info-value" id="infoWaterLevel">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flask-zone">
+                <div class="flask-wrapper">
+                    <div class="flask">
+                        <div class="water" id="waterLevel"></div>
+                    </div>
+                    <div class="ball" id="ball"></div>
+                    <div class="overflow-arrows" id="overflowArrows">
+                        <div class="arrow"></div>
+                        <div class="arrow"></div>
+                        <div class="arrow"></div>
+                    </div>
+                </div>
+                <div class="scale-wrapper" id="scaleWrapper"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 Архимед Симулятор. Все права защищены.</p>
+    </footer>
+</div>
+
+<script th:src="@{/archimed/script.js}"></script>
+</body>
+</html>

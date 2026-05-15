@@ -1,4 +1,4 @@
-package com.example.archimed;
+package com.example.physic.modules.archimed;
 
 public final class Constants {
      public Constants() {

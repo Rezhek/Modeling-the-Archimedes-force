@@ -1,6 +1,5 @@
-package com.example.archimed;
+package com.example.physic.modules.archimed;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

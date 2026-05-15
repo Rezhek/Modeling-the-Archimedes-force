@@ -1,0 +1,167 @@
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+}
+
+.glass-container {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
+    padding: 48px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 48px;
+    box-shadow: 0 12px 64px 0 rgba(0, 0, 0, 0.6);
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- СТИЛЬ ЛАБОРАТОРНОЙ ТЕТРАДИ --- */
+.notebook-panel {
+    width: 420px;
+    background: #fdfdfd;
+    color: #333;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 8px 8px 24px rgba(0,0,0,0.3);
+    position: relative;
+    background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
+    background-size: 100% 28px;
+    line-height: 28px;
+    max-height: 800px;
+    overflow-y: auto; /* Скролл для длинных отчетов */
+    
+    /* Animation improvements */
+    opacity: 0;
+    visibility: hidden;
+    max-width: 0;
+    padding: 32px 0;
+    margin: 0;
+    transition: opacity 0.4s ease, max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease, margin 0.4s ease;
+    overflow-x: hidden;
+}
+
+.notebook-panel.active {
+    display: block; /* Fallback but we use classes mostly */
+    opacity: 1;
+    visibility: visible;
+    max-width: 420px;
+    padding: 32px;
+    margin-right: 0;
+}
+
+.notebook-panel::before {
+    content: ''; position: absolute; top: 0; left: 45px;
+    width: 2px; height: 100%; background: rgba(255, 0, 0, 0.2);
+}
+
+.notebook-content {
+    margin-left: 40px;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Стили для печатной машинки */
+.typewriter-style {
+    white-space: pre-wrap;
+    border-right: 2px solid #333;
+    animation: blink-cursor 0.75s step-end infinite;
+    color: #000080; /* Темно-синие чернила */
+}
+
+@keyframes blink-cursor {
+    from, to { border-color: transparent }
+    50% { border-color: #333; }
+}
+
+/* Панель управления */
+.controls {
+    display: flex; flex-direction: column; gap: 32px; width: 420px; flex-shrink: 0;
+}
+
+.simulation-area {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 600px;
+}
+
+.neon-text {
+    color: #ffffff;
+    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+    font-weight: 600; letter-spacing: 1px;
+}
+
+h1.neon-text {
+    font-size: 32px; text-transform: uppercase; margin-bottom: 8px;
+}
+
+.control-group { display: flex; flex-direction: column; gap: 12px; }
+
+label { font-size: 14px; color: var(--purple-300); text-transform: uppercase; letter-spacing: 0.8px; }
+
+select, input[type="range"] {
+    width: 100%; padding: 14px; background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border); color: #ffffff;
+    border-radius: 12px; outline: none; transition: all 0.3s ease; cursor: pointer;
+    font-size: 1rem;
+}
+
+select:hover, select:focus {
+    border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+
+input[type="range"] { -webkit-appearance: none; height: 6px; padding: 0; accent-color: #00ffff; }
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    background: #00ffff; border-radius: 50%; box-shadow: 0 0 10px #00ffff;
+}
+
+/* Кнопки */
+.btn-student {
+    background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff;
+    color: #00ffff; padding: 16px; border-radius: 12px; cursor: pointer;
+    font-weight: bold; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    font-size: 1.1rem;
+}
+
+.btn-student:hover {
+    background: #00ffff; color: #000; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-student:active {
+    transform: translateY(0);
+}
+
+canvas {
+    border-radius: 24px; border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.2);
+}
+
+.result-box {
+    margin-top: auto; padding: 24px; background: rgba(0, 255, 255, 0.05);
+    border-radius: 16px; text-align: center; border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.result-value { font-size: 48px; color: #00ffff; margin-top: 10px; }
+
+.lang-selector-mini {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}

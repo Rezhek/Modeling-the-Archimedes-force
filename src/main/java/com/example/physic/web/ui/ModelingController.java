@@ -1,12 +1,15 @@
-package com.example.archimed.vec;
+package com.example.physic.web.ui;
 
-import com.example.archimed.Constants;
-import com.example.archimed.ErrorRate;
-import com.example.archimed.Model;
+import com.example.physic.modules.archimed.Constants;
+import com.example.physic.modules.archimed.Err;
+import com.example.physic.modules.archimed.Model;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Slf4j
 @Controller
@@ -14,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class ModelingController {
 
     private final Model model;
-    private final ErrorRate errorRate;
+    private final Err errorRate;
 
     // ========== Вспомогательный метод для добавления констант в модель ==========
     private void addConstantAttributes(org.springframework.ui.Model uiModel) {
@@ -32,7 +35,7 @@ public class ModelingController {
     }
 
     // ========== Главная страница ==========
-    @GetMapping("/")
+    @GetMapping("/archimed")
     public String showPage(org.springframework.ui.Model uiModel) {
         log.info("Открыта главная страница");
 
@@ -48,11 +51,11 @@ public class ModelingController {
         addConstantAttributes(uiModel);
         uiModel.addAttribute("model", model);
 
-        return "index";
+        return "archimed";
     }
 
     // ========== Обработка формы расчёта ==========
-    @PostMapping("/")
+    @PostMapping("/archimed")
     public String calculate(
             @RequestParam("ballDensity") float ballDensity,
             @RequestParam("radius") float radius,
@@ -79,7 +82,7 @@ public class ModelingController {
         addConstantAttributes(uiModel);
         uiModel.addAttribute("model", model);
 
-        return "index";
+        return "archimed";
     }
 
     // ========== Эндпоинты для работы с погрешностями ==========

@@ -1,4 +1,4 @@
-package com.example.archimed;
+package com.example.physic.modules.archimed;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import java.util.Random;
 @Component
 @Getter
 @Setter
-public class ErrorRate {
+public class Err {
 
     private boolean active = false;
     private List<Double> measurements = new ArrayList<>();

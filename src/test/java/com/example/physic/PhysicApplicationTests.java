@@ -1,13 +1,14 @@
-package com.example.archimed;
+package com.example.physic;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ArchimedApplicationTests {
+class PhysicApplicationTests {
 
     @Test
     void contextLoads() {
+
     }
 
 }
